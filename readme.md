@@ -12,7 +12,7 @@ __Copyright (c) 2015-2016 eBay Software Foundation__
 * [Method Section](#Method-Section)
 * [Example]()
 
-<a name=Purpose>
+<a name=Purpose></a>
 ##Purpose
 The D language profiler that comes with DMD produces traces that are not designed for humans to read.
 This program reads a trace file (trace.log) and turns it into an interactive HTML file designed for human navigation and understanding.
