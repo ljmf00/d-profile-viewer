@@ -1,0 +1,26 @@
+------------------
+	    2	_D15profile_example7method2FZi
+	    1	_D15profile_example7method3FZi
+_D15profile_example7method1FZi	3	94	94
+------------------
+	    1	_D15profile_example7method3FZi
+_D15profile_example7method2FZi	1	445	351
+	    2	_D15profile_example7method1FZi
+------------------
+	    1	_Dmain
+_D15profile_example7method3FZi	1	695	250
+	    1	_D15profile_example7method2FZi
+	    1	_D15profile_example7method1FZi
+------------------
+_Dmain	0	1354	659
+	    1	_D15profile_example7method3FZi
+
+======== Timer Is 3579545 Ticks/Sec, Times are in Microsecs ========
+
+  Num          Tree        Func        Per
+  Calls        Time        Time        Call
+
+      1         378         184         184     _Dmain
+      1         124          98          98     int profile_example.method2()
+      1         194          69          69     int profile_example.method3()
+      3          26          26           8     int profile_example.method1()
