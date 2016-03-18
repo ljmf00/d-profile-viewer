@@ -1,5 +1,6 @@
 #D Profile Viewer
 __by Andrew Trotman__
+
 __Copyright (c) 2015-2016 eBay Software Foundation__
 
 ##Table of Contents
@@ -97,7 +98,8 @@ To avoid confusion, this method is identified as __This Function__.
 <a name=Example>
 ##Example
 Starting with a simple program that does a few method calls:
-`module profile_example;
+`
+module profile_example;
 
 int method1()
 {
@@ -118,7 +120,7 @@ int main(string[] args)
 {
 return method3;
 }
-</pre>`
+`
 
 Compile using DMD and the profile option
 
@@ -127,6 +129,7 @@ Compile using DMD and the profile option
 Now run the program
 
 `./profile_example`
+
 This will produce a file called `trace.log` in the directory the program was run from.
 That file should look something like this
 
@@ -169,7 +172,7 @@ At the top is an overview of all the methods that were called, the number of tim
 
 Click on this image to load the HTML file.
 
-<img src=images/ProfileExample.png>
+![Profile Example](images/ProfileExample.png)
 
 __**Last Updated:16 March 2016**__\n
 
