@@ -5,19 +5,17 @@ __Copyright (c) 2015-2016 eBay Software Foundation__
 
 ##Table of Contents
 
-* [Purpose](#Purpose)
-* [Quick Start Guide](#Quick-Start-Guide)
-* [Building D Profile Viewer](#Building-D-Profile-Viewer)
-* [Overview Section](#Overview-Section)
-* [Method Section](#Method-Section)
-* [Example]()
+* [Purpose](markdown-header-purpose)
+* [Quick Start Guide](markdown-header-quick-start-guide)
+* [Building D Profile Viewer](markdown-header-building-d-profile-viewer)
+* [Overview Section](markdown-header-overview-section)
+* [Method Section](markdown-header-method-section)
+* [Example](markdown-header-exmaple)
 
-<a name=Purpose></a>
 ##Purpose
 The D language profiler that comes with DMD produces traces that are not designed for humans to read.
 This program reads a trace file (trace.log) and turns it into an interactive HTML file designed for human navigation and understanding.
 
-<a name=Quick>
 ##Quick Start Guide
 Compile your program using `dmd -profile`, then `rm trace.log` then run
 your program.  This will produce a fresh file called
@@ -28,11 +26,9 @@ The columns on each of the tables are sortable by clicking on the table column h
 Remember, your D program does not create a new `trace.log` for each run, it appends to it.
 So delete `trace.log` between runs.
 
-<a name=Building>
 ##Building D Profile Viewer
 `dmd d_profile_viewer.d demangle.d`
 
-<a name=Overview>
 ##Overview Section
 At the top of the `html` file is an overview of each of the methods that was called.
 It will look something like the image below, where:
@@ -52,7 +48,6 @@ __NOTE:__The table can be sorted on any field in either increasing or decreasing
 
 ![Overview](images/Overview.png)
 
-<a name=Method>
 ##Method Section
 Following the Overview Section is a section for each method. That is, in turn, divided into four sections.
 The top section provides a link to the Overview section (i.e. the top of the file) marked "&uarr;", along with the demangled name of the method.
@@ -92,7 +87,6 @@ To avoid confusion, this method is identified as __This Function__.
 
 ![One Method](images/OneMethod.png)
 
-<a name=Example>
 ##Example
 Starting with a simple program that does a few method calls:
 
