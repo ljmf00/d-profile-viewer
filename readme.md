@@ -1,48 +1,48 @@
-<h1>D Profile Viewer</h1>
-<b>by Andrew Trotman</b><br>
-<b>Copyright (c) 2015-2016 eBay Software Foundation</b><br>
+#D Profile Viewer
+__by Andrew Trotman__
+__Copyright (c) 2015-2016 eBay Software Foundation__
 
-<h2>Table of Contents</h2>
+##Table of Contents
 <ul>
-<li><a href=#Purpose>Purpose</a></li>
-<li><a href=#Quick>Quick Start Guide</a></li>
-<li><a href=#Building>Building D Profile Viewer</a></li>
-<li><a href=#Overview>Overview Section</a></li>
-<li><a href=#Method>Method Section</a></li>
-<li><a href=#Example>Example</a></li>
+* <a href=#Purpose>Purpose</a>
+* <a href=#Quick>Quick Start Guide</a>
+* <a href=#Building>Building D Profile Viewer</a>
+* <a href=#Overview>Overview Section</a>
+* <a href=#Method>Method Section</a>
+* <a href=#Example>Example</a>
 </ul>
 
 <a name=Purpose>
-<h2>Purpose</h2>
+##Purpose
 <p>The D language profiler that comes with DMD produces traces that are not designed for humans to read.
 This program reads a trace file (trace.log) and turns it into an interactive HTML file designed for human navigation and understanding.</p>
 
 <a name=Quick>
-<h2>Quick Start Guide</h2>
-<p>Compile your program using <code>dmd -profile</code>, then <code>rm trace.log</code> then run
+##Quick Start Guide
+<p>Compile your program using `dmd -profile`, then `rm trace.log` then run
 your program.  This will produce a fresh file called
-<code>trace.log</code> in the current directory.  Now run <code>d_profile_viewer</code>.  It reads
-<code>trace.log</code> and generates <code>trace.html</code>.  Load that into your web browser.
+`trace.log` in the current directory.  Now run `d_profile_viewer`.  It reads
+`trace.log` and generates `trace.html`.  Load that into your web browser.
 The columns on each of the tables are sortable by clicking on the table column headings.</p>
-<p>Remember, your D program does not create a new <code>trace.log</code> for each run, it appends to it.
-So delete <code>trace.log</code> between runs.
+<p>Remember, your D program does not create a new `trace.log` for each run, it appends to it.
+So delete `trace.log` between runs.
 
 <a name=Building>
-<h2>Building D Profile Viewer</h2>
-<code>dmd d_profile_viewer.d demangle.d</code>
+##Building D Profile Viewer
+`dmd d_profile_viewer.d demangle.d`
 
 <a name=Overview>
-<h2>Overview Section</h2>
-<p>At the top of the <code>html</code> file is an overview of each of the methods that was called.
+##Overview Section
+<p>At the top of the `html` file is an overview of each of the methods that was called.
 It will look something like the image below, where:</p>
 <ul>
-<li><b>Calls</b> gives the number of times the method was called.</li>
-<li><b>F time</b> gives the amount of time (microseconds) spend in that method.</li>
-<li><b>F+D time</b> gives the amount of time (microseconds) spend in that method and all descendants of that method.</li>
-<li><b>F time %</b> gives the percent of total execution time spent in that method.</li>
-<li><b>F+D time %</b> gives the percent of total execution time spent in that method and all descendants of that method.</li>
-<li><b>Avg F time</b> gives the average time in the function (excluding descendants).</li>
-<li><b>Function</b> gives the name of the demangled name of the function.</li>
+* <b>Calls</b> gives the number of times the method was called.
+* <b>F time</b> gives the amount of time (microseconds) spend in that method.
+* <b>F+D time</b> gives the amount of time (microseconds) spend in that method and all descendants of that method.
+* <b>F time %</b> gives the percent of total execution time spent in that method.
+* <b>F+D time %</b> gives the percent of total execution time spent in that method and all descendants of that method.
+* <b>Avg F time</b> gives the average time in the function (excluding descendants).
+* <b>Function</b> gives the name of the demangled name of the function.
 </ul>
 <p><b>F time</b> is the time spend in the method <i>excluding</i> all method calls done by that method whereas the <b>F+D time</b>
 <i>includes</i> the time spent doing all those method calls.</p>
@@ -50,43 +50,43 @@ It will look something like the image below, where:</p>
 <img src=images/Overview.png>
 
 <a name=Method>
-<h2>Method Section</h2>
+##Method Section
 <p>Following the Overview Section is a section for each method. That is, in turn, divided into four sections.
 The top section provides a link to the Overview section (i.e. the top of the file) marked "&uarr;", along with the demangled name of the method.</p>
 <p>Next is a section giving basic statistics about <i>this method</i> including:
 <ul>
-<li><b>Method</b> The method name.</li>
-<li><b>Calls</b> The number of times the method was called.</li>
-<li><b>Function time</b> The amount of time (in microseconds, μs) spend in the method <i>excluding</i> descendants.</li>
-<li><b>F+D time</b> The amount of time (in microseconds, μs) spend in the method <i>including</i> descendants.</li>
+* <b>Method</b> The method name.
+* <b>Calls</b> The number of times the method was called.
+* <b>Function time</b> The amount of time (in microseconds, μs) spend in the method <i>excluding</i> descendants.
+* <b>F+D time</b> The amount of time (in microseconds, μs) spend in the method <i>including</i> descendants.
 </ul>
 <p>To the left of these stats is a pie chars showing the proportion of the total execution time spent in this function and the descendants of this function.</p>
 <p>Next comes details about the <i>callers</i> of this function.</p>
 <ul>
-<li><b>Calls</b> The number of times this method was called by that method.</li>
-<li><b>Percent</b> The percent of the total called to this method that are accounted to that method.</li>
-<li><b>Caller</b> The method that called this method.</li>
+* <b>Calls</b> The number of times this method was called by that method.
+* <b>Percent</b> The percent of the total called to this method that are accounted to that method.
+* <b>Caller</b> The method that called this method.
 </ul>
 <p>This table is sortable on any column by clicking on the column header.  By clicking on a <b>Caller</b> the browser will navigate to the details about that function.  A graph showing the percentage of calls is given on the left.</p>
 <p>The final section is details about <i>method called</i> by this method including:</p>
 <ul>
-<li><b>Calls</b> The number of times this method calls that method.</li>
-<li><b>&asymp;Time</b> The approximate time spent in that method (see below).</li>
-<li><b>&asymp;Percent</b> The approximate proportion of time spent in that method (see below).</li>
-<li><b>Descendant</b> The name of the descendant method called by this method.</li>
+* <b>Calls</b> The number of times this method calls that method.
+* <b>&asymp;Time</b> The approximate time spent in that method (see below).
+* <b>&asymp;Percent</b> The approximate proportion of time spent in that method (see below).
+* <b>Descendant</b> The name of the descendant method called by this method.
 </ul>
 <p>This table is sortable on any column by clicking on the column header.  By clicking on a <b>Descendant</b> the browser will navigate to the details about that function.</p>
 
-<p><b>&asymp;Time</b> and <b>&asymp;Percent</b> are not generated by <code>dmd -profile</code>, they are approximated by D Profile Viewer.  This is achieved by taking the total time spent in that method an its descendants, dividing by the total number of times that method is called, then multiplying by the number of times this method calls that method.  In other words, assuming all calls to that function take the same amount of time, its the proportion attributed to calls by this method.  Although this is a reasonable way to compute a value, it can be wildly inaccurate in the case where some calls are quick while others are slow.
+<p><b>&asymp;Time</b> and <b>&asymp;Percent</b> are not generated by `dmd -profile`, they are approximated by D Profile Viewer.  This is achieved by taking the total time spent in that method an its descendants, dividing by the total number of times that method is called, then multiplying by the number of times this method calls that method.  In other words, assuming all calls to that function take the same amount of time, its the proportion attributed to calls by this method.  Although this is a reasonable way to compute a value, it can be wildly inaccurate in the case where some calls are quick while others are slow.
 Note, this also explains why the sum of this section does not equal the F+F time for this method</p>
 <p>The graph on the left shows the percent of time spend in each of the descendants and this function.</p>
 <p>To avoid confusion, this method is identified as <b>This Function</b>.</p>
 <img src=images/OneMethod.png>
 
 <a name=Example>
-<h2>Example</h2>
+##Example
 <p>Starting with a simple program that does a few method calls:</p>
-<pre><code>module profile_example;
+<pre>`module profile_example;
 
 int method1()
 {
@@ -107,15 +107,15 @@ int main(string[] args)
 {
 return method3;
 }
-</pre></code>
+</pre>`
 
 <p>Compile using DMD and the profile option</p>
-<code>dmd -profile profile_example.d </code><br>
+`dmd -profile profile_example.d `
 <p>Now run the program</p>
-<code>./profile_example</code>
-<p>This will produce a file called <code>trace.log</code> in the directory the program was run from.
+`./profile_example`
+<p>This will produce a file called `trace.log` in the directory the program was run from.
 That file should look something like this</p>
-<pre><code>------------------
+`------------------
 	    2	_D15profile_example7method2FZi
 	    1	_D15profile_example7method3FZi
 _D15profile_example7method1FZi	3	56	56
@@ -141,12 +141,12 @@ _Dmain	0	784	304
       1          78          62          62     int profile_example.method2()
       1         134          55          55     int profile_example.method3()
       3          15          15           5     int profile_example.method1()
-</code></pre>
+`
 <p>The top part of this file is the program's call graph.  Names are shown mangled.  The bottom
 part is a bunch of stats about each method (whose names are demangled).</p>
 <p>Now run the D profile viewer</p>
-<code>d_profile_viewer</code>
-<p>This will read <code>trace.log</code> from the current directory and generate a <code>trace.html</code> in the current directory.  Once loaded into a web browser it will display something like the image below.
+`d_profile_viewer`
+<p>This will read `trace.log` from the current directory and generate a `trace.html` in the current directory.  Once loaded into a web browser it will display something like the image below.
 At the top is an overview of all the methods that were called, the number of times the method was called, and so on.  Below that there is a section for each method showing stats about that method, about the callers of that method, and the methods it calls.</p>
 <p>Click on this image to load the HTML file.</p>
 
