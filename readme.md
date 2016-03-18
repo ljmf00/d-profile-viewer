@@ -10,7 +10,7 @@ __Copyright (c) 2015-2016 eBay Software Foundation__
 * [Building D Profile Viewer](#Building-D-Profile-Viewer)
 * [Overview Section](#Overview-Section)
 * [Method Section](#Method-Section)
-* [Example][]
+* [Example]()
 
 <a name=Purpose>
 ##Purpose
