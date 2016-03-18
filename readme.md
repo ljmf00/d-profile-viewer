@@ -4,6 +4,7 @@ __by Andrew Trotman__
 __Copyright (c) 2015-2016 eBay Software Foundation__
 
 ##Table of Contents
+--toc
 
 * <a href=#Purpose>Purpose</a>
 * <a href=#Quick>Quick Start Guide</a>
@@ -171,5 +172,5 @@ Click on this image to load the HTML file.
 
 ![Profile Example](images/ProfileExample.png)
 
-__*Last Updated:16 March 2016*__\n
+__*Last Updated:18 March 2016*__
 
