@@ -4,14 +4,13 @@ __by Andrew Trotman__
 __Copyright (c) 2015-2016 eBay Software Foundation__
 
 ##Table of Contents
---toc
 
-* <a href=#Purpose>Purpose</a>
-* <a href=#Quick>Quick Start Guide</a>
-* <a href=#Building>Building D Profile Viewer</a>
-* <a href=#Overview>Overview Section</a>
-* <a href=#Method>Method Section</a>
-* <a href=#Example>Example</a>
+* [Purpose](#Purpose)
+* [Quick Start Guide](#Quick-Start-Guide)
+* [Building D Profile Viewer](#Building-D-Profile-Viewer)
+* [Overview Section](#Overview-Section)
+* [Method Section](#Method-Section)
+* [Example](#Example)
 
 <a name=Purpose>
 ##Purpose
@@ -97,27 +96,27 @@ To avoid confusion, this method is identified as __This Function__.
 ##Example
 Starting with a simple program that does a few method calls:
 `
-module profile_example;
+	module profile_example;
 
-int method1()
-{
-return 1;
-}
+	int method1()
+	{
+	return 1;
+	}
 
-int method2()
-{
-return method1 + method1;
-}
+	int method2()
+	{
+	return method1 + method1;
+	}
 
-int method3()
-{
-return method2 + method1;
-}
+	int method3()
+	{
+	return method2 + method1;
+	}
 
-int main(string[] args)
-{
-return method3;
-}
+	int main(string[] args)
+	{
+	return method3;
+	}
 `
 
 Compile using DMD and the profile option
@@ -131,32 +130,33 @@ Now run the program
 This will produce a file called `trace.log` in the directory the program was run from.
 That file should look something like this
 
-`------------------
-	    2	_D15profile_example7method2FZi
-	    1	_D15profile_example7method3FZi
-_D15profile_example7method1FZi	3	56	56
-------------------
-	    1	_D15profile_example7method3FZi
-_D15profile_example7method2FZi	1	280	224
-	    2	_D15profile_example7method1FZi
-------------------
-	    1	_Dmain
-_D15profile_example7method3FZi	1	480	200
-	    1	_D15profile_example7method2FZi
-	    1	_D15profile_example7method1FZi
-------------------
-_Dmain	0	784	304
-	    1	_D15profile_example7method3FZi
+`
+	------------------
+			 2	_D15profile_example7method2FZi
+			 1	_D15profile_example7method3FZi
+	_D15profile_example7method1FZi	3	56	56
+	------------------
+			 1	_D15profile_example7method3FZi
+	_D15profile_example7method2FZi	1	280	224
+			 2	_D15profile_example7method1FZi
+	------------------
+			 1	_Dmain
+	_D15profile_example7method3FZi	1	480	200
+			 1	_D15profile_example7method2FZi
+			 1	_D15profile_example7method1FZi
+	------------------
+	_Dmain	0	784	304
+			 1	_D15profile_example7method3FZi
 
-======== Timer Is 3579545 Ticks/Sec, Times are in Microsecs ========
+	======== Timer Is 3579545 Ticks/Sec, Times are in Microsecs ========
 
-  Num          Tree        Func        Per
-  Calls        Time        Time        Call
+	  Num          Tree        Func        Per
+	  Calls        Time        Time        Call
 
-      1         219          84          84     _Dmain
-      1          78          62          62     int profile_example.method2()
-      1         134          55          55     int profile_example.method3()
-      3          15          15           5     int profile_example.method1()
+			1         219          84          84     _Dmain
+			1          78          62          62     int profile_example.method2()
+			1         134          55          55     int profile_example.method3()
+			3          15          15           5     int profile_example.method1()
 `
 The top part of this file is the program's call graph.  Names are shown mangled.  The bottom
 part is a bunch of stats about each method (whose names are demangled).
