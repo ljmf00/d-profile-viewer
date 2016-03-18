@@ -45,8 +45,8 @@ It will look something like the image below, where:
 * __Avg F time__ gives the average time in the function (excluding descendants).
 * __Function__ gives the name of the demangled name of the function.
 
-__F time__ is the time spend in the method **excluding** all method calls done by that method whereas the __F+D time__
-**includes** the time spent doing all those method calls.
+__F time__ is the time spend in the method *excluding* all method calls done by that method whereas the __F+D time__
+*includes* the time spent doing all those method calls.
 
 __NOTE:__The table can be sorted on any field in either increasing or decreasing order by clicking on the column header.
 
@@ -57,16 +57,16 @@ __NOTE:__The table can be sorted on any field in either increasing or decreasing
 Following the Overview Section is a section for each method. That is, in turn, divided into four sections.
 The top section provides a link to the Overview section (i.e. the top of the file) marked "&uarr;", along with the demangled name of the method.
 
-Next is a section giving basic statistics about **this method** including:
+Next is a section giving basic statistics about *this method* including:
 
 * __Method__ The method name.
 * __Calls__ The number of times the method was called.
-* __Function time__ The amount of time (in microseconds, μs) spend in the method **excluding** descendants.
-* __F+D time__ The amount of time (in microseconds, μs) spend in the method **including** descendants.
+* __Function time__ The amount of time (in microseconds, μs) spend in the method *excluding* descendants.
+* __F+D time__ The amount of time (in microseconds, μs) spend in the method *including* descendants.
 
 To the left of these stats is a pie chars showing the proportion of the total execution time spent in this function and the descendants of this function.
 
-Next comes details about the **callers** of this function.
+Next comes details about the *callers* of this function.
 
 * __Calls__ The number of times this method was called by that method.
 * __Percent__ The percent of the total called to this method that are accounted to that method.
@@ -74,7 +74,7 @@ Next comes details about the **callers** of this function.
 
 This table is sortable on any column by clicking on the column header.  By clicking on a __Caller__ the browser will navigate to the details about that function.  A graph showing the percentage of calls is given on the left.
 
-The final section is details about **method called** by this method including:
+The final section is details about *method called* by this method including:
 
 * __Calls__ The number of times this method calls that method.
 * __&asymp;Time__ The approximate time spent in that method (see below).
@@ -171,5 +171,5 @@ Click on this image to load the HTML file.
 
 ![Profile Example](images/ProfileExample.png)
 
-__**Last Updated:16 March 2016**__\n
+__*Last Updated:16 March 2016*__\n
 
