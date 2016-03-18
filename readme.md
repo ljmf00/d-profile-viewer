@@ -130,8 +130,7 @@ Now run the program
 This will produce a file called `trace.log` in the directory the program was run from.
 That file should look something like this
 
-`
-	------------------
+`	------------------
 			 2	_D15profile_example7method2FZi
 			 1	_D15profile_example7method3FZi
 	_D15profile_example7method1FZi	3	56	56
@@ -158,6 +157,7 @@ That file should look something like this
 			1         134          55          55     int profile_example.method3()
 			3          15          15           5     int profile_example.method1()
 `
+
 The top part of this file is the program's call graph.  Names are shown mangled.  The bottom
 part is a bunch of stats about each method (whose names are demangled).
 
