@@ -1,6 +1,6 @@
 /*
-	D_PROFILE_VIEWER.D
-	------------------
+	APP.D
+	-----
 	Copyright (c) 2015-2016 eBay Software Foundation
 	Written by Andrew Trotman
 	Licensed under the 3-clause BSD license (see here:https://en.wikipedia.org/wiki/BSD_licenses)
@@ -1091,5 +1091,4 @@ catch
 	writeln("trace.log appears to be corrupt");
 	return 1;
 	}
-return 0;
 }

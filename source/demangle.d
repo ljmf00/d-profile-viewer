@@ -1,7 +1,7 @@
 /*
 	DMANGLE.D
 	---------
-	Copyright (c) 2015 eBay Software Foundation
+	Copyright (c) 2015-2016 eBay Software Foundation
 	Written by Andrew Trotman
 	Licensed under the 3-clause BSD license (see here:https://en.wikipedia.org/wiki/BSD_licenses)
 
@@ -122,6 +122,7 @@ while (true)
 		case '0': .. case'9':
 		case 'A': .. case'Z':
 			answer ~= get_next();
+			break;
 		default:
 			return answer;
 		}
@@ -197,6 +198,7 @@ const (char) [] HexFloat()
 						get_next();
 						return "-real.infinity";
 						}
+               return answer;
 				case '0': .. case'9':		// a negative number (That's what the N stands for)
 				case 'B': .. case'F':
 					auto hex = HexDigits();
@@ -462,7 +464,6 @@ const (char) [] TemplateArgs()
 				return answer;
 			}
 		}
-	return answer;
 	}
 
 /*
@@ -485,7 +486,7 @@ const (char) [] QualifiedName()
 
 	/*
 		See D language Issue 3043 in Bugzilla (https://issues.dlang.org/show_bug.cgi?id=3043) which says:
-	
+
 			For example, this code
 			--------------------
 			module test;
@@ -600,8 +601,6 @@ const (char) [] TypeModifiers()
 		count++;
 		}
 	while (true);
-
-	return modifiers;
 	}
 
 /*
@@ -736,8 +735,6 @@ const (char) [] FuncAttrs()
 			}
 		else
 			return answer;
-
-	return answer;
 	}
 
 /*
@@ -799,7 +796,7 @@ const (char) [] Parameters()
 				get_next();
 				count++;
 				answer ~= "...";
-				return answer;;
+				return answer;
 			case 'Y':
 				get_next();
 				answer ~= ", ...";
@@ -1077,7 +1074,6 @@ const (char) [] TypeX(const (char) [] name = "", bool allow_deligates = false, b
 				return modifiers ~ " " ~ func;
 			else
 				return func;
-			break;
 		case 'z':
 			switch (peek_next(1))
 				{
@@ -1090,15 +1086,13 @@ const (char) [] TypeX(const (char) [] name = "", bool allow_deligates = false, b
 					get_next();
 					return "cent";
 				default:
-					break;
+					return "unknown";
 				}
 		case 'Z':			// Internal (documented to exist but it is undocumented what it is)
 			return name;
 		default:
 			return name;
 		}
-
-	return type;
 	}
 
 /*
@@ -1115,18 +1109,22 @@ const (char) [] Type(const (char) [] name, bool allow_deligates = false, bool is
 	auto mod = TypeModifiers();
 
 	if (mod.length != 0)
+		{
 		if (is_function)
 			answer ~= mod ~ " ";
 		else
 			answer ~= mod ~ "(";
+		}
 
 	answer ~= TypeX(name, allow_deligates, in_struct);
 
 	if (mod.length != 0)
+		{
 		if (is_function)
 			answer ~= "";
 		else
 			answer ~= ")";
+		}
 
 	return answer;
 	}

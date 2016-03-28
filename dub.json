@@ -1,0 +1,11 @@
+{
+	"name": "d-profile-viewer",
+	"description": "Tool to convert dmd profiler output trace.log into trace.hmtl, an interactive HTML file.",
+	"copyright": "Copyright © 2015-2016, eBay Software Foundation",
+	"authors": ["Andrew Trotman"],
+	"homepage": "https://bitbucket.org/andrewtrotman/d-profile-viewer",
+	"license": "BSD 3-clause",
+	"versons": "1.0.0",
+	"dependencies": {
+	}
+}
