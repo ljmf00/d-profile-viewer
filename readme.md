@@ -27,6 +27,7 @@ Remember, your D program does not create a new `trace.log` for each run, it appe
 So delete `trace.log` between runs.
 
 ##Building D Profile Viewer
+'cd src'
 `dmd d_profile_viewer.d demangle.d`
 
 ##Overview Section
@@ -165,4 +166,3 @@ At the top is an overview of all the methods that were called, the number of tim
 ![Profile Example](images/ProfileExample.png)
 
 __*Last Updated:18 March 2016*__
-
