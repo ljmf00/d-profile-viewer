@@ -27,7 +27,7 @@ Remember, your D program does not create a new `trace.log` for each run, it appe
 So delete `trace.log` between runs.
 
 ##Building D Profile Viewer
-'cd src'
+'cd source'
 `dmd d_profile_viewer.d demangle.d`
 
 ##Overview Section
