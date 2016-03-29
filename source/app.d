@@ -5,6 +5,8 @@
 	Written by Andrew Trotman
 	Licensed under the 3-clause BSD license (see here:https://en.wikipedia.org/wiki/BSD_licenses)
 */
+
+import core.stdc.stdlib;
 import std.file;
 import std.stdio;
 import std.string;
@@ -12,36 +14,34 @@ import demangle;
 import core.runtime;
 import std.conv;
 import std.algorithm;
+import std.exception;
 
-/*
-	Where we write the output
-*/
-File outstream;
+private File outstream; //Where we write the output
 
 /*
 	CLASS FUNCTION_EDGE
 	-------------------
 	There's one of these objects for each function in program being profiled.
 */
-class function_edge
+private class FunctionEdge
 {
 public:
-	const char [] name;					// the demangled name of the function
-	const char [] mangled_name;		// the mangled name
-	ulong calls;							// number of times the function is called
+    const char[] name; // the demangled name of the function
+    const char[] mangled_name; // the mangled name
+    ulong calls; // number of times the function is called
 
 public:
-	/*
+    /*
 		THIS()
 		------
 		Constructor
 	*/
-	this(const (char) [] mangled_name, ulong calls)
-	{
-	this.mangled_name = mangled_name;
-	this.name = demangle.demangle(mangled_name);
-	this.calls = calls;
-	}
+    this(const(char)[] mangled_name, ulong calls)
+    {
+        this.mangled_name = mangled_name;
+        this.name = demangle.demangle(mangled_name);
+        this.calls = calls;
+    }
 }
 
 /*
@@ -49,65 +49,66 @@ public:
 	-------------------
 
 */
-class function_node
+private class FunctionNode
 {
 public:
-	function_edge [string] called_by;
-	function_edge [string] calls_to;
-	const char [] name;
-	const char [] mangled_name;
-	ulong number_of_calls;
-	ulong function_and_descendant_time;		// in cycles
-	ulong function_time;							// in cycles
+    FunctionEdge[string] called_by;
+    FunctionEdge[string] calls_to;
+    const char[] name;
+    const char[] mangled_name;
+    ulong number_of_calls;
+    ulong function_and_descendant_time; // in cycles
+    ulong function_time; // in cycles
 
 private:
-	/*
+    /*
 		PERCENT()
 		---------
 		Compute top/bottom to 2 decimal places
 	*/
-	double percent(double top, double bottom)
-	{
-	return cast(double)(cast(size_t)((top / bottom * 10000.0))) / 100.0;
-	}
+    double percent(double top, double bottom)
+    {
+        return cast(double)(cast(size_t)((top / bottom * 100_00.0))) / 100.0;
+    }
 
-	/*
+    /*
 		TO_US()
 		-------
 		Convert from ticks to micro-seconds
 	*/
-	size_t to_us(double ticks, double ticks_per_second)
-	{
-	return cast(size_t)(ticks / ticks_per_second * 1000 * 1000);
-	}
+    size_t to_us(double ticks, double ticks_per_second)
+    {
+        return cast(size_t)(ticks / ticks_per_second * 1000 * 1000);
+    }
 
 public:
-	/*
+    /*
 		THIS()
 		------
 	*/
-	this(char [] mangled_name, ulong calls, ulong function_and_descendant_time, ulong function_time, function_edge [string] called_by, function_edge [string] calls_to)
-	{
-	this.mangled_name = mangled_name;
-	this.name = demangle.demangle(mangled_name);
-	this.number_of_calls = calls;
-	this.function_and_descendant_time = function_and_descendant_time;
-	this.function_time = function_time;
-	this.called_by = called_by;
-	this.calls_to = calls_to;
-	}
+    this(char[] mangled_name, ulong calls, ulong function_and_descendant_time,
+        ulong function_time, FunctionEdge[string] called_by, FunctionEdge[string] calls_to)
+    {
+        this.mangled_name = mangled_name;
+        this.name = demangle.demangle(mangled_name);
+        this.number_of_calls = calls;
+        this.function_and_descendant_time = function_and_descendant_time;
+        this.function_time = function_time;
+        this.called_by = called_by;
+        this.calls_to = calls_to;
+    }
 
-	/*
+    /*
 		DUMP_JAVASCRIPT()
 		-----------------
 	*/
-	static void dump_javascript()
-	{
-/*
+    static void dump_javascript()
+    {
+        /*
 	This code is from Stuart Langridge, see: http://www.kryogenix.org/code/browser/sorttable/
 	Its the JavaScript that sorts table columns when the user clicks on the column header
 */
-	outstream.write("
+        outstream.write("
 	/*
 	  SortTable
 	  version 2
@@ -603,73 +604,80 @@ public:
 		}
 	};
 	");
-	}
+    }
 
-	/*
+    /*
 		HTML_RENDER_HEADER()
 		--------------------
 		Dump the HTML header
 	*/
-	static void html_render_header()
-	{
-	outstream.write("<a name=A_top>");
-	outstream.write("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
-	outstream.write("<body link=#000000 vlink=#000000 alink=#000000><style>A{text-decoration:none}</style>");
-	outstream.write("<center><font size=+2><i><b>Overview</b></i></font></center>");
-	outstream.write("<script>");
-	dump_javascript;
-	outstream.write("</script>");
-	outstream.write("<table class=sortable>");
+    static void html_render_header()
+    {
+        outstream.write("<a name=A_top>");
+        outstream.write("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
+        outstream.write(
+            "<body link=#000000 vlink=#000000 alink=#000000><style>A{text-decoration:none}</style>");
+        outstream.write("<center><font size=+2><i><b>Overview</b></i></font></center>");
+        outstream.write("<script>");
+        dump_javascript;
+        outstream.write("</script>");
+        outstream.write("<table class=sortable>");
 
-	outstream.write("<tr>");
-	outstream.write("<th valign=bottom align=right>Calls</th>");
-	outstream.write("<th valign=bottom align=right>F time</th>");
-	outstream.write("<th valign=bottom align=right>F+D time</th>");
-	outstream.write("<th valign=bottom align=right>F time %</th>");
-	outstream.write("<th valign=bottom align=right>F+D time %</th>");
-	outstream.write("<th valign=bottom align=right>Avg F time</th>");
-	outstream.write("<th valign=bottom align=left>Function</th>");
-	outstream.write("</tr>");
-	}
+        outstream.write("<tr>");
+        outstream.write("<th valign=bottom align=right>Calls</th>");
+        outstream.write("<th valign=bottom align=right>F time</th>");
+        outstream.write("<th valign=bottom align=right>F+D time</th>");
+        outstream.write("<th valign=bottom align=right>F time %</th>");
+        outstream.write("<th valign=bottom align=right>F+D time %</th>");
+        outstream.write("<th valign=bottom align=right>Avg F time</th>");
+        outstream.write("<th valign=bottom align=left>Function</th>");
+        outstream.write("</tr>");
+    }
 
-	/*
+    /*
 		HTML_RENDER_FOOTER()
 		--------------------
 		Dump the close tags at the end of the HTML file
 	*/
-	static void html_render_footer()
-	{
-	outstream.writeln("</table><hr></body>");
-	}
+    static void html_render_footer()
+    {
+        outstream.writeln("</table><hr></body>");
+    }
 
-	/*
+    /*
 		HTML_RENDER_SUMMARY()
 		---------------------
 		Dump the summary information about a given function
 	*/
-	void html_render_summary(double total_time, double ticks_per_second)
-	{
-	outstream.write("<tr>");
-	outstream.write("<td align=right>", number_of_calls, "</td>");
-	outstream.write("<td align=right>", to_us(function_time, ticks_per_second), "</td>");
-	outstream.write("<td align=right>", to_us(function_and_descendant_time, ticks_per_second), "</td>");
-	outstream.write("<td align=right>", percent(function_time, total_time), "</td>");
-	outstream.write("<td align=right>", percent(function_and_descendant_time, total_time), "</td>");
-	outstream.write("<td align=right>",	to_us(function_time / max(number_of_calls, 1), ticks_per_second), "</td>");
-	outstream.write("<td><a href=#A_", mangled_name, ">", name, "</a></td>");
-	outstream.write("</tr>");
-	}
+    void html_render_summary(double total_time, double ticks_per_second)
+    {
+        outstream.write("<tr>");
+        outstream.write("<td align=right>", number_of_calls, "</td>");
+        outstream.write("<td align=right>", to_us(function_time, ticks_per_second),
+            "</td>");
+        outstream.write("<td align=right>", to_us(function_and_descendant_time,
+            ticks_per_second), "</td>");
+        outstream.write("<td align=right>", percent(function_time, total_time), "</td>");
+        outstream.write("<td align=right>",
+            percent(function_and_descendant_time, total_time), "</td>");
+        outstream.write("<td align=right>",
+            to_us(function_time / max(number_of_calls, 1), ticks_per_second), "</td>");
+        outstream.write("<td><a href=#A_", mangled_name, ">", name, "</a></td>");
+        outstream.write("</tr>");
+    }
 
-	/*
+    /*
 		HTML_RENDER()
 		-------------
 		Render the data about a single function
 	*/
-	void html_render(double total_time, double ticks_per_second, in function_node[string] nodes)
-	{
-	outstream.write("<a name='A_", mangled_name, "'</a><br>");
-	outstream.write("<table cellspacing=0 cellpadding=0><tr><td><font size=+2><i><b><a href=#A_top>&uarr;</a><center>", name, "</center></b></i></font></td></tr><tr><td>");
-	outstream.write("
+    void html_render(double total_time, double ticks_per_second, in FunctionNode[string] nodes)
+    {
+        outstream.write("<a name='A_", mangled_name, "'</a><br>");
+        outstream.write(
+            "<table cellspacing=0 cellpadding=0><tr><td><font size=+2><i><b><a href=#A_top>&uarr;</a><center>",
+            name, "</center></b></i></font></td></tr><tr><td>");
+        outstream.write("
 	<script type=\"text/javascript\" src=\"https://www.google.com/jsapi\"></script>
 
 	<script type=\"text/javascript\">
@@ -679,8 +687,11 @@ public:
 		{
 		var data = google.visualization.arrayToDataTable([
 		['Method', 'time'],
-		['", name, "', ", to_us(function_and_descendant_time, ticks_per_second), "],
-		['others',  ", to_us(total_time - function_and_descendant_time, ticks_per_second), "],
+		['", name, "', ", to_us(function_and_descendant_time,
+            ticks_per_second), "],
+		['others',  ",
+            to_us(total_time - function_and_descendant_time, ticks_per_second),
+            "],
 		]);
 
 		var options =
@@ -694,26 +705,34 @@ public:
 				}
 			};
 
-		var chart = new google.visualization.PieChart(document.getElementById('", mangled_name, "'));
+		var chart = new google.visualization.PieChart(document.getElementById('",
+            mangled_name, "'));
 		chart.draw(data, options);
 		}
 	</script>
 	");
 
-	outstream.write("
+        outstream.write("
 	<div name=func>
 		<table id=graph cellspacing=0 cellpadding=0>
 			<tr>
 				<td>
-					<div id=\"", mangled_name, "\" style=\"width: 200px; height: 200px;\"></div>
+					<div id=\"", mangled_name,
+            "\" style=\"width: 200px; height: 200px;\"></div>
 				</td>
 				<td>
 					<table id=stats cellspacing=2 cellpadding=2>
-						<tr><th align=right>Method:</th><td> </td><td>", name, "</td></tr>
+						<tr><th align=right>Method:</th><td> </td><td>",
+            name, "</td></tr>
 <!--						<tr><th align=right>Mangled:</th><td> </td><td>", mangled_name, "</td></tr> -->
-						<tr><th align=right>Calls:</th><td> </td><td>", number_of_calls, "</td></tr>
-						<tr><th align=right>Function time:</th><td bgcolor='#000000'>&nbsp;</td><td>", to_us(function_time, ticks_per_second), "μs (", percent(function_time, total_time), "% of Focus)</td></tr>
-						<tr><th align=right>F+D time:</th><td bgcolor=#DC3912>&nbsp;</td><td>", to_us(function_and_descendant_time, ticks_per_second), "μs (", percent(function_and_descendant_time, total_time), "% of Focus)</td></tr>
+						<tr><th align=right>Calls:</th><td> </td><td>",
+            number_of_calls, "</td></tr>
+						<tr><th align=right>Function time:</th><td bgcolor='#000000'>&nbsp;</td><td>", to_us(function_time,
+            ticks_per_second), "μs (", percent(function_time, total_time),
+            "% of Focus)</td></tr>
+						<tr><th align=right>F+D time:</th><td bgcolor=#DC3912>&nbsp;</td><td>",
+            to_us(function_and_descendant_time, ticks_per_second), "μs (",
+            percent(function_and_descendant_time, total_time), "% of Focus)</td></tr>
 					</table>
 				<td>
 			<tr>
@@ -721,22 +740,27 @@ public:
 	</div>
 	");
 
-	string[] colors = ["#3366CC", "#DC3912", "#FF9900", "#109618", "#990099", "#3B3EAC", "#0099C6", "#DD4477", "#66AA00", "#B82E2E", "#316395", "#994499", "#22AA99", "#AAAA11", "#6633CC", "#E67300", "#8B0707", "#329262", "#5574A6", "#3B3EAC"];
+        string[] colors = [
+            "#3366CC", "#DC3912", "#FF9900", "#109618", "#990099", "#3B3EAC",
+            "#0099C6", "#DD4477", "#66AA00", "#B82E2E", "#316395", "#994499",
+            "#22AA99", "#AAAA11", "#6633CC", "#E67300", "#8B0707", "#329262",
+            "#5574A6", "#3B3EAC"
+        ];
 
-	size_t total = 0;
-	foreach (current; called_by)
-		total += current.calls;
+        size_t total = 0;
+        foreach (current; called_by)
+            total += current.calls;
 
-	outstream.write("
+        outstream.write("
 	<script type=\"text/javascript\">
 		google.setOnLoadCallback(drawChart);
 		function drawChart()
 		{
 		var data = google.visualization.arrayToDataTable([
 		['Method', 'Calls'],");
-		foreach (current; called_by)
-			outstream.write("['", current.name, "',  ", current.calls, "],");
-		outstream.write("
+        foreach (current; called_by)
+            outstream.write("['", current.name, "',  ", current.calls, "],");
+        outstream.write("
 		]);
 
 		var options =
@@ -745,77 +769,83 @@ public:
 			legend: 'none',
 			slices:
 				{");
-				for (size_t col = 0; col < min(colors.length, called_by.length); col++)
-					outstream.writeln("\t\t\t\t", col, ":{color:'", colors[col], "'},");
-				outstream.write(
-				"\t\t\t\t}
+        for (size_t col = 0; col < min(colors.length, called_by.length); col++)
+            outstream.writeln("\t\t\t\t", col, ":{color:'", colors[col], "'},");
+        outstream.write("\t\t\t\t}
 			};
-		var chart = new google.visualization.PieChart(document.getElementById('", mangled_name, "_by'));
+		var chart = new google.visualization.PieChart(document.getElementById('",
+            mangled_name, "_by'));
 		chart.draw(data, options);
 		}
 	</script>
 	");
 
-	outstream.write("
+        outstream.write("
 	<div name=func>
 		<table id=graph cellspacing=0 cellpadding=0>
 			<tr>
 				<td>
-					<div id=\"", mangled_name, "_by\" style=\"width: 200px; height: 200px;\"></div>
+					<div id=\"",
+            mangled_name, "_by\" style=\"width: 200px; height: 200px;\"></div>
 				</td>
 				<td>
 					<table id=graphstats cellspacing=2 cellpadding=2 class=sortable>");
-						if (called_by.length == 0)
-							outstream.writeln("<tr><th></th><th align=left>No Caller</th><th></th><th></th></tr>");
-						else
-							{
-							outstream.write("<tr>");
-							outstream.write("<th>Calls</th>");
-							outstream.write("<th>Percent</th>");
-							outstream.write("<th></th>");
-							outstream.write("<th align=left>Caller</th>");
-							outstream.write("</tr>");
-							}
-						size_t count = 0;
-						foreach (current; called_by)
-							{
-							outstream.write("\t\t\t\t\t\t");
-							outstream.write("<tr>");
-							outstream.write("<td align=right>", current.calls, "</td>");
-							outstream.write("<td align=right>", percent(current.calls, total), "</td>");
-							outstream.write("<td bgcolor=", colors[count < colors.length ? count : colors.length - 1],">&nbsp;</td>");
-							outstream.write("<td align=left><a href='#A_", current.mangled_name, "'>", current.name, "</a></td>");
-							outstream.write("</tr>");
-							count++;
-							}
-						outstream.write("
+        if (called_by.length == 0)
+            outstream.writeln("<tr><th></th><th align=left>No Caller</th><th></th><th></th></tr>");
+        else
+        {
+            outstream.write("<tr>");
+            outstream.write("<th>Calls</th>");
+            outstream.write("<th>Percent</th>");
+            outstream.write("<th></th>");
+            outstream.write("<th align=left>Caller</th>");
+            outstream.write("</tr>");
+        }
+        size_t count = 0;
+        foreach (current; called_by)
+        {
+            outstream.write("\t\t\t\t\t\t");
+            outstream.write("<tr>");
+            outstream.write("<td align=right>", current.calls, "</td>");
+            outstream.write("<td align=right>", percent(current.calls, total), "</td>");
+            outstream.write("<td bgcolor=",
+                colors[count < colors.length ? count : colors.length - 1], ">&nbsp;</td>");
+            outstream.write("<td align=left><a href='#A_",
+                current.mangled_name, "'>", current.name, "</a></td>");
+            outstream.write("</tr>");
+            count++;
+        }
+        outstream.write("
 					</table>");
-					outstream.write("
+        outstream.write("
 				<td>
 			<tr>
 		</table>
 	</div>
 	");
 
+        total = 0;
+        foreach (current; calls_to)
+            total += current.calls;
 
-	total = 0;
-	foreach (current; calls_to)
-		total += current.calls;
-
-	outstream.write("
+        outstream.write("
 	<script type=\"text/javascript\">
 		google.setOnLoadCallback(drawChart);
 		function drawChart()
 		{
 		var data = google.visualization.arrayToDataTable([
 		['Method', 'Calls'],");
-		outstream.write("['This Function',  ", to_us(function_time, ticks_per_second), "],");
-		foreach (current; calls_to)
-			{
-			ulong descendant_time = (nodes[current.mangled_name].function_and_descendant_time / nodes[current.mangled_name].number_of_calls) * current.calls;
-			outstream.write("['", current.name, "',  ", to_us(descendant_time, ticks_per_second), "],");
-			}
-		outstream.write("
+        outstream.write("['This Function',  ", to_us(function_time, ticks_per_second),
+            "],");
+        foreach (current; calls_to)
+        {
+            ulong descendant_time = (
+                nodes[current.mangled_name].function_and_descendant_time
+                / nodes[current.mangled_name].number_of_calls) * current.calls;
+            outstream.write("['", current.name, "',  ", to_us(descendant_time,
+                ticks_per_second), "],");
+        }
+        outstream.write("
 		]);
 
 		var options =
@@ -824,76 +854,87 @@ public:
 			legend: 'none',
 			slices:
 				{");
-				outstream.write("\t\t\t\t", 0, ":{color:'#000000'},");
-				for (size_t col = 0; col < min(colors.length, calls_to.length); col++)
-					outstream.write("\t\t\t\t", col + 1, ":{color:'", colors[col], "'},");
-				outstream.write(
-				"\t\t\t\t}
+        outstream.write("\t\t\t\t", 0, ":{color:'#000000'},");
+        for (size_t col = 0; col < min(colors.length, calls_to.length); col++)
+            outstream.write("\t\t\t\t", col + 1, ":{color:'", colors[col], "'},");
+        outstream.write("\t\t\t\t}
 			};
-		var chart = new google.visualization.PieChart(document.getElementById('", mangled_name, "_to'));
+		var chart = new google.visualization.PieChart(document.getElementById('",
+            mangled_name, "_to'));
 		chart.draw(data, options);
 		}
 	</script>
 	");
 
-	outstream.write("
+        outstream.write("
 	<div name=func>
 		<table id=graph cellspacing=0 cellpadding=0>
 			<tr>
 				<td>
-					<div id=\"", mangled_name, "_to\" style=\"width: 200px; height: 200px;\"></div>
+					<div id=\"",
+            mangled_name, "_to\" style=\"width: 200px; height: 200px;\"></div>
 				</td>
 				<td>
 					<table id=graphstats cellspacing=2 cellpadding=2 class=sortable>");
-						outstream.write("<tr>");
-						if (calls_to.length != 0)
-							outstream.write("<th>Calls</th>");
-						else
-							outstream.write("<th></th>");
-						outstream.write("<th>≈Time</th>");
-						outstream.write("<th>≈Percent</th>");
-						outstream.write("<th></th>");
-						outstream.write("<th align=left>Descendant</th>");
-						outstream.write("</tr>");
-						count = 0;
-						ulong descendant_time_sum = function_time;
-						foreach (current; calls_to)
-							descendant_time_sum += (nodes[current.mangled_name].function_and_descendant_time / nodes[current.mangled_name].number_of_calls) * current.calls;
+        outstream.write("<tr>");
+        if (calls_to.length != 0)
+            outstream.write("<th>Calls</th>");
+        else
+            outstream.write("<th></th>");
+        outstream.write("<th>≈Time</th>");
+        outstream.write("<th>≈Percent</th>");
+        outstream.write("<th></th>");
+        outstream.write("<th align=left>Descendant</th>");
+        outstream.write("</tr>");
+        count = 0;
+        ulong descendant_time_sum = function_time;
+        foreach (current; calls_to)
+            descendant_time_sum += (
+                nodes[current.mangled_name].function_and_descendant_time
+                / nodes[current.mangled_name].number_of_calls) * current.calls;
 
-						outstream.write("\t\t\t\t\t\t");
-						outstream.write("<tr>");
-						outstream.write("<td></td>");
-						outstream.write("<td align=right>", to_us(function_time, ticks_per_second), "μs</td>");
-						outstream.write("<td align=right>", percent(function_time, descendant_time_sum), "</td>");
-						outstream.write("<td bgcolor='#000000'>&nbsp;</td>");
-						outstream.write("<td align=left>This Function</a></td>");
-						outstream.write("</tr>");
+        outstream.write("\t\t\t\t\t\t");
+        outstream.write("<tr>");
+        outstream.write("<td></td>");
+        outstream.write("<td align=right>", to_us(function_time, ticks_per_second),
+            "μs</td>");
+        outstream.write("<td align=right>", percent(function_time, descendant_time_sum),
+            "</td>");
+        outstream.write("<td bgcolor='#000000'>&nbsp;</td>");
+        outstream.write("<td align=left>This Function</a></td>");
+        outstream.write("</tr>");
 
-						foreach (current; calls_to)
-							{
-							ulong descendant_time = (nodes[current.mangled_name].function_and_descendant_time / nodes[current.mangled_name].number_of_calls) * current.calls;
-							outstream.write("\t\t\t\t\t\t");
-							outstream.write("<tr>");
-							outstream.write("<td align=right>", current.calls, "</td>");
-							outstream.write("<td align=right>", to_us(descendant_time, ticks_per_second), "μs</td>");
-							outstream.write("<td align=right>", percent(descendant_time, descendant_time_sum), "</td>");
-							outstream.write("<td bgcolor=", colors[count < colors.length ? count : colors.length - 1],">&nbsp;</td>");
-							outstream.write("<td align=left><a href='#A_", current.mangled_name, "'>", current.name, "</a></td>");
-							outstream.write("</tr>");
-							count++;
-							}
-						outstream.write("
+        foreach (current; calls_to)
+        {
+            ulong descendant_time = (
+                nodes[current.mangled_name].function_and_descendant_time
+                / nodes[current.mangled_name].number_of_calls) * current.calls;
+            outstream.write("\t\t\t\t\t\t");
+            outstream.write("<tr>");
+            outstream.write("<td align=right>", current.calls, "</td>");
+            outstream.write("<td align=right>", to_us(descendant_time,
+                ticks_per_second), "μs</td>");
+            outstream.write("<td align=right>", percent(descendant_time,
+                descendant_time_sum), "</td>");
+            outstream.write("<td bgcolor=",
+                colors[count < colors.length ? count : colors.length - 1], ">&nbsp;</td>");
+            outstream.write("<td align=left><a href='#A_",
+                current.mangled_name, "'>", current.name, "</a></td>");
+            outstream.write("</tr>");
+            count++;
+        }
+        outstream.write("
 					</table>");
-					outstream.write("
+        outstream.write("
 				<td>
 			<tr>
 		</table>
 	</div>
 	");
 
-	outstream.write("</td></tr></table>");
-	outstream.write("<hr>");
-	}
+        outstream.write("</td></tr></table>");
+        outstream.write("<hr>");
+    }
 }
 
 /*
@@ -902,193 +943,165 @@ public:
 	Convert from a linear buffer into an array of lines.  This is used along with read() to convert a file into
 	an array where each element in the array is a line from the file.
 */
-char [][] buffer_to_list(void [] file)
+private char[][] buffer_to_list(void[] file)
 {
-char *start = cast(char *)file.ptr;
-char *end = cast(char *)file.ptr + file.length;
-char [][] answer;
-uint next = 0;
+    char* start = cast(char*) file.ptr;
+    char* end = cast(char*) file.ptr + file.length;
+    char[][] answer;
+    uint next = 0;
 
-for (auto ch = start; ch < end; ch++)
-	if (*ch == '\n')
-		{
-		if (next >= answer.length)
-			answer.length += 100000;
-		answer[next++] = start[0..ch - start];
-		start = ch + 1;
-		}
-
-return answer;
+    for (auto ch = start; ch < end; ch++)
+        if (*ch == '\n')
+        {
+            if (next >= answer.length){
+                answer.length += 100_000;
+            }
+            answer[next++] = start[0 .. ch - start];
+            start = ch + 1;
+        }
+    return answer;
 }
 
-/*
-	DRAW_PROFILE()
-	--------------
-*/
-int draw_profile(string [] args)
+private int draw_profile()
 {
-bool caller = true;
-function_node[string] nodes;
-function_edge[string] caller_graph;
-function_edge[string] called_graph;
-ulong ticks_per_second;
-ulong function_times;
-ulong function_and_descendant;
-ulong function_only;
-char [] function_name;
+    bool caller = true;
+    FunctionNode[string] nodes;
+    FunctionEdge[string] caller_graph;
+    FunctionEdge[string] called_graph;
+    ulong ticks_per_second;
+    ulong function_times;
+    ulong function_and_descendant;
+    ulong function_only;
+    char[] function_name;
+    auto filename = "trace.log";
+    void[] file;
 
-/*
-	Open the input file
-*/
-auto filename = "trace.log";
-void [] file;
-try
-	file = read(filename);
-catch
-	{
-	writeln("Cannot open input file trace.log");
-	return 1;
-	}
+    try
+    {
+        file = read(filename);
+    }
+    catch (Exception ex)
+    {
+        writeln("Cannot open input file trace.log");
+        exit(0);
+    }
 
-if (file.length == 0)
-	{
-	writeln("trace.log is empty");
-	return 1;
-	}
-/*
-	Convert it into an array of lines
-*/
-auto lines = buffer_to_list(file);
+    if (file.length == 0)
+    {
+        writeln("trace.log is empty");
+        exit(0);
+    }
 
-/*
-	open the output file
-*/
-try
-	outstream = File("trace.html", "wb");
-catch
-	{
-	writeln("Cannot open output file");
-	return 1;
-	}
+    auto lines = buffer_to_list(file);
 
-/*
-	parse the trace.log file.
-*/
-for (auto line = 0; line < lines.length; line++)
-	{
-	if (lines[line].length == 0)
-		{
-		/*
-			Ignore blank lines
-		*/
-		continue;
-		}
-	else if (lines[line][0] == '=')
-		{
-		/*
-			Seperator between call graph and summary data
-		*/
-		auto number = indexOfAny(lines[line], "1234567890");
-		if (number < 0)
-			{
-			writeln("Corrupt trace.log (can't compute ticks per second), please re-profile and try again");
-			return 1;
-			}
-		auto space = indexOf(lines[line][number..$], ' ') + number;
-		ticks_per_second = to!ulong(lines[line][number..space]);
-		break;
-		}
-	else if (lines[line][0] == '-')
-		{
-		/*
-			Seperator between each function call graph
-		*/
-		caller = true;
-		if (function_name.length != 0)
-			nodes[text(function_name)] = new function_node(function_name, function_times, function_and_descendant, function_only, caller_graph, called_graph);
-		caller_graph = null;
-		called_graph = null;
-		}
-	else if (lines[line][0] == '_')
-		{
-		/*
-			The name of the function were're currently examining the call graph for (seperates callers from called)
-		*/
-		auto start_tab = indexOf(lines[line], '\t');
-		auto middle_tab = indexOf(lines[line][start_tab + 1..$], '\t') + start_tab + 1;
-		auto last_tab = indexOf(lines[line][middle_tab + 1..$], '\t') + middle_tab + 1;
-		function_name = lines[line][0..start_tab];
-		function_times = to!ulong(lines[line][start_tab + 1..middle_tab]);
-		function_and_descendant = to!ulong(lines[line][middle_tab + 1..last_tab]);
-		function_only = to!ulong(lines[line][last_tab + 1..$]);
-		caller = false;
-		}
-	else if (lines[line][0] == '\t')
-		{
-		/*
-			A function either calling or called by this function
-		*/
-		auto pos = indexOf(lines[line], '_');
-		auto start_pos = indexOfAny(lines[line], "1234567890");
-		if (start_pos < 0 || pos < 0 || pos < start_pos)
-			{
-			writeln("Corrupt trace.log (call count is non-numeric), please re-profile and try again");
-			return 1;
-			}
-		auto times = to!ulong(lines[line][start_pos..pos - 1]);
-		auto name = lines[line][pos..$];
-		if (caller)
-			caller_graph[text(name)] = new function_edge(name, times);
-		else
-			called_graph[text(name)] = new function_edge(name, times);
-		}
-	}
-if (function_name.length != 0)
-	nodes[text(function_name)] = new function_node(function_name, function_times, function_and_descendant, function_only, caller_graph, called_graph);
+    try
+    {
+        outstream = File("trace.html", "wb");
+    }
+    catch (ErrnoException ex)
+    {
+        writeln("Cannot open output file");
+        exit(0);
+    }
 
-auto dmain = nodes["_Dmain"];
-if (dmain is null)
-	{
-	writeln("Corrupt trace.log (there's no entry for _Dmain), please re-profile and try again");
-	return 1;
-	}
-auto total_time = dmain.function_and_descendant_time;
+    // parse the trace.log file.
+    for (auto line = 0; line < lines.length; line++)
+    {
+        if (lines[line].length == 0)
+        {
+            continue; // Ignore blank lines
+        }
+        else if (lines[line][0] == '=') // Seperator between call graph and summary data
 
-/*
-	render the overview table at the top of the screen
-*/
-function_node.html_render_header();
-foreach(current; nodes)
-	current.html_render_summary(total_time, ticks_per_second);
-function_node.html_render_footer();
+        {
+            auto number = indexOfAny(lines[line], "1234567890");
+            if (number < 0)
+            {
+                writeln(
+                    "Corrupt trace.log (can't compute ticks per second), please re-profile and try again");
+                exit(0);
+            }
+            auto space = indexOf(lines[line][number .. $], ' ') + number;
+            ticks_per_second = to!ulong(lines[line][number .. space]);
+            break;
+        }
+        else if (lines[line][0] == '-') //Seperator between each function call graph
+        {
+            caller = true;
+            if (function_name.length != 0)
+                nodes[text(function_name)] = new FunctionNode(function_name,
+                    function_times, function_and_descendant, function_only,
+                    caller_graph, called_graph);
+            caller_graph = null;
+            called_graph = null;
+        }
+        else if (lines[line][0] == '_') //The name of the function were're currently examining the call graph for (seperates callers from called)
+        {
+            auto start_tab = indexOf(lines[line], '\t');
+            auto middle_tab = indexOf(lines[line][start_tab + 1 .. $], '\t') + start_tab + 1;
+            auto last_tab = indexOf(lines[line][middle_tab + 1 .. $], '\t') + middle_tab + 1;
+            function_name = lines[line][0 .. start_tab];
+            function_times = to!ulong(lines[line][start_tab + 1 .. middle_tab]);
+            function_and_descendant = to!ulong(lines[line][middle_tab + 1 .. last_tab]);
+            function_only = to!ulong(lines[line][last_tab + 1 .. $]);
+            caller = false;
+        }
+        else if (lines[line][0] == '\t')
+        {
+            // A function either calling or called by this function
+            auto pos = indexOf(lines[line], '_');
+            auto start_pos = indexOfAny(lines[line], "1234567890");
+            if (start_pos < 0 || pos < 0 || pos < start_pos)
+            {
+                writeln("Corrupt trace.log (call count is non-numeric), please re-profile and try again");
+                exit(0);
+            }
+            immutable times = to!ulong(lines[line][start_pos .. pos - 1]);
+            auto name = lines[line][pos .. $];
+            if (caller)
+            {
+                caller_graph[text(name)] = new FunctionEdge(name, times);
+            }
+            else
+            {
+                called_graph[text(name)] = new FunctionEdge(name, times);
+            }
+        }
+    }
+    if (function_name.length != 0)
+    {
+        nodes[text(function_name)] = new FunctionNode(function_name,
+            function_times, function_and_descendant, function_only, caller_graph, called_graph);
+    }
 
-/*
-	render each function
-*/
-foreach(current; nodes)
-	current.html_render(total_time, ticks_per_second, nodes);
+    auto dmain = nodes["_Dmain"];
 
-return 0;
+    if (dmain is null)
+    {
+        writeln("Corrupt trace.log (there's no entry for _Dmain), please re-profile and try again");
+        exit(0);
+    }
+
+    auto total_time = dmain.function_and_descendant_time;
+
+    FunctionNode.html_render_header();
+    foreach (current; nodes){
+        current.html_render_summary(total_time, ticks_per_second);
+    }
+    FunctionNode.html_render_footer();
+
+    foreach (current; nodes){
+        current.html_render(total_time, ticks_per_second, nodes);
+    }
+
+    return 0;
 }
 
-/*
-	MAIN()
-	------
-*/
-int main(string [] args)
+int main()
 {
-try
-	{
-	/*
-		In the off chance that this program is compiled to use the profiler we'll change the name of the output to avoid destruction
-	*/
-	trace_setlogfilename("trace.log.d_profile_viewer");
-	trace_setdeffilename("trace.def.d_profile_viewer");
-	return draw_profile(args);
-	}
-catch
-	{
-	writeln("trace.log appears to be corrupt");
-	return 1;
-	}
+	//In the off chance that this program is compiled to use the profiler
+	//we'll change the name of the output to avoid destruction
+    trace_setlogfilename("trace.log.d_profile_viewer");
+    trace_setdeffilename("trace.def.d_profile_viewer");
+    return draw_profile();
 }
