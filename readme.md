@@ -28,10 +28,15 @@ So delete `trace.log` between runs.
 
 ##Building D Profile Viewer
 Either 
+
 `cd source`
+
 `dmd app.d demangle.d -ofd-profile-viewer`
+
 Or
+
 `dub fetch d-profile-viewer`
+
 `dub build d_profile_viewer`
 
 ##Overview Section
