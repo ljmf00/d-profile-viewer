@@ -5,6 +5,8 @@
 	Written by Andrew Trotman
 	Licensed under the 3-clause BSD license (see here:https://en.wikipedia.org/wiki/BSD_licenses)
 */
+
+import core.stdc.stdlib;
 import std.file;
 import std.stdio;
 import std.string;
@@ -12,18 +14,16 @@ import demangle;
 import core.runtime;
 import std.conv;
 import std.algorithm;
+import std.exception;
 
-/*
-	Where we write the output
-*/
-File outstream;
+private File outstream; //Where we write the output
 
 /*
 	CLASS FUNCTION_EDGE
 	-------------------
 	There's one of these objects for each function in program being profiled.
 */
-class function_edge
+private class FunctionEdge
 {
 public:
     const char[] name; // the demangled name of the function
@@ -49,11 +49,11 @@ public:
 	-------------------
 
 */
-class function_node
+private class FunctionNode
 {
 public:
-    function_edge[string] called_by;
-    function_edge[string] calls_to;
+    FunctionEdge[string] called_by;
+    FunctionEdge[string] calls_to;
     const char[] name;
     const char[] mangled_name;
     ulong number_of_calls;
@@ -68,7 +68,7 @@ private:
 	*/
     double percent(double top, double bottom)
     {
-        return cast(double)(cast(size_t)((top / bottom * 10000.0))) / 100.0;
+        return cast(double)(cast(size_t)((top / bottom * 100_00.0))) / 100.0;
     }
 
     /*
@@ -87,7 +87,7 @@ public:
 		------
 	*/
     this(char[] mangled_name, ulong calls, ulong function_and_descendant_time,
-        ulong function_time, function_edge[string] called_by, function_edge[string] calls_to)
+        ulong function_time, FunctionEdge[string] called_by, FunctionEdge[string] calls_to)
     {
         this.mangled_name = mangled_name;
         this.name = demangle.demangle(mangled_name);
@@ -280,7 +280,7 @@ public:
 		 for (var i=0; i<table.tBodies[0].rows.length; i++) {
 			text = sorttable.getInnerText(table.tBodies[0].rows[i].cells[column]);
 			if (text != '') {
-			  if (text.match(/^-?[£$¤]?[\\d,.]+%?$/)) {
+			  if (text.match(/^-?[Â£$Â¤]?[\\d,.]+%?$/)) {
 				 return sorttable.sort_numeric;
 			  }
 			  // check for a date: dd/mm/yyyy or dd/mm/yy
@@ -671,7 +671,7 @@ public:
 		-------------
 		Render the data about a single function
 	*/
-    void html_render(double total_time, double ticks_per_second, in function_node[string] nodes)
+    void html_render(double total_time, double ticks_per_second, in FunctionNode[string] nodes)
     {
         outstream.write("<a name='A_", mangled_name, "'</a><br>");
         outstream.write(
@@ -728,10 +728,10 @@ public:
 						<tr><th align=right>Calls:</th><td> </td><td>",
             number_of_calls, "</td></tr>
 						<tr><th align=right>Function time:</th><td bgcolor='#000000'>&nbsp;</td><td>", to_us(function_time,
-            ticks_per_second), "μs (", percent(function_time, total_time),
+            ticks_per_second), "Î¼s (", percent(function_time, total_time),
             "% of Focus)</td></tr>
 						<tr><th align=right>F+D time:</th><td bgcolor=#DC3912>&nbsp;</td><td>",
-            to_us(function_and_descendant_time, ticks_per_second), "μs (",
+            to_us(function_and_descendant_time, ticks_per_second), "Î¼s (",
             percent(function_and_descendant_time, total_time), "% of Focus)</td></tr>
 					</table>
 				<td>
@@ -881,8 +881,8 @@ public:
             outstream.write("<th>Calls</th>");
         else
             outstream.write("<th></th>");
-        outstream.write("<th>≈Time</th>");
-        outstream.write("<th>≈Percent</th>");
+        outstream.write("<th>â‰ˆTime</th>");
+        outstream.write("<th>â‰ˆPercent</th>");
         outstream.write("<th></th>");
         outstream.write("<th align=left>Descendant</th>");
         outstream.write("</tr>");
@@ -897,7 +897,7 @@ public:
         outstream.write("<tr>");
         outstream.write("<td></td>");
         outstream.write("<td align=right>", to_us(function_time, ticks_per_second),
-            "μs</td>");
+            "Î¼s</td>");
         outstream.write("<td align=right>", percent(function_time, descendant_time_sum),
             "</td>");
         outstream.write("<td bgcolor='#000000'>&nbsp;</td>");
@@ -913,7 +913,7 @@ public:
             outstream.write("<tr>");
             outstream.write("<td align=right>", current.calls, "</td>");
             outstream.write("<td align=right>", to_us(descendant_time,
-                ticks_per_second), "μs</td>");
+                ticks_per_second), "Î¼s</td>");
             outstream.write("<td align=right>", percent(descendant_time,
                 descendant_time_sum), "</td>");
             outstream.write("<td bgcolor=",
@@ -943,7 +943,7 @@ public:
 	Convert from a linear buffer into an array of lines.  This is used along with read() to convert a file into
 	an array where each element in the array is a line from the file.
 */
-char[][] buffer_to_list(void[] file)
+private char[][] buffer_to_list(void[] file)
 {
     char* start = cast(char*) file.ptr;
     char* end = cast(char*) file.ptr + file.length;
@@ -953,111 +953,90 @@ char[][] buffer_to_list(void[] file)
     for (auto ch = start; ch < end; ch++)
         if (*ch == '\n')
         {
-            if (next >= answer.length)
-                answer.length += 100000;
+            if (next >= answer.length){
+                answer.length += 100_000;
+            }
             answer[next++] = start[0 .. ch - start];
             start = ch + 1;
         }
-
     return answer;
 }
 
-/*
-	DRAW_PROFILE()
-	--------------
-*/
-int draw_profile(string[] args)
+private int draw_profile()
 {
     bool caller = true;
-    function_node[string] nodes;
-    function_edge[string] caller_graph;
-    function_edge[string] called_graph;
+    FunctionNode[string] nodes;
+    FunctionEdge[string] caller_graph;
+    FunctionEdge[string] called_graph;
     ulong ticks_per_second;
     ulong function_times;
     ulong function_and_descendant;
     ulong function_only;
     char[] function_name;
-
-    /*
-	Open the input file
-*/
     auto filename = "trace.log";
     void[] file;
+
     try
+    {
         file = read(filename);
-    catch
+    }
+    catch (Exception ex)
     {
         writeln("Cannot open input file trace.log");
-        return 1;
+        exit(0);
     }
 
     if (file.length == 0)
     {
         writeln("trace.log is empty");
-        return 1;
+        exit(0);
     }
-    /*
-	Convert it into an array of lines
-*/
+
     auto lines = buffer_to_list(file);
 
-    /*
-	open the output file
-*/
     try
+    {
         outstream = File("trace.html", "wb");
-    catch
+    }
+    catch (ErrnoException ex)
     {
         writeln("Cannot open output file");
-        return 1;
+        exit(0);
     }
 
-    /*
-	parse the trace.log file.
-*/
+    // parse the trace.log file.
     for (auto line = 0; line < lines.length; line++)
     {
         if (lines[line].length == 0)
         {
-            /*
-			Ignore blank lines
-		*/
-            continue;
+            continue; // Ignore blank lines
         }
-        else if (lines[line][0] == '=')
+        else if (lines[line][0] == '=') // Seperator between call graph and summary data
+
         {
-            /*
-			Seperator between call graph and summary data
-		*/
             auto number = indexOfAny(lines[line], "1234567890");
             if (number < 0)
             {
                 writeln(
                     "Corrupt trace.log (can't compute ticks per second), please re-profile and try again");
-                return 1;
+                exit(0);
             }
             auto space = indexOf(lines[line][number .. $], ' ') + number;
             ticks_per_second = to!ulong(lines[line][number .. space]);
             break;
         }
-        else if (lines[line][0] == '-')
+        else if (lines[line][0] == '-') //Seperator between each function call graph
         {
-            /*
-			Seperator between each function call graph
-		*/
             caller = true;
             if (function_name.length != 0)
-                nodes[text(function_name)] = new function_node(function_name,
+                nodes[text(function_name)] = new FunctionNode(function_name,
                     function_times, function_and_descendant, function_only,
                     caller_graph, called_graph);
             caller_graph = null;
             called_graph = null;
         }
-        else if (lines[line][0] == '_')
+        else if (lines[line][0] == '_') //The name of the function were're currently examining the call graph for (seperates callers from called)
         {
-            /*
-			The name of the function were're currently examining the call graph for (seperates callers from called)
-		*/
             auto start_tab = indexOf(lines[line], '\t');
             auto middle_tab = indexOf(lines[line][start_tab + 1 .. $], '\t') + start_tab + 1;
             auto last_tab = indexOf(lines[line][middle_tab + 1 .. $], '\t') + middle_tab + 1;
@@ -1069,72 +1048,60 @@ int draw_profile(string[] args)
         }
         else if (lines[line][0] == '\t')
         {
-            /*
-			A function either calling or called by this function
-		*/
+            // A function either calling or called by this function
             auto pos = indexOf(lines[line], '_');
             auto start_pos = indexOfAny(lines[line], "1234567890");
             if (start_pos < 0 || pos < 0 || pos < start_pos)
             {
-                writeln(
-                    "Corrupt trace.log (call count is non-numeric), please re-profile and try again");
-                return 1;
+                writeln("Corrupt trace.log (call count is non-numeric), please re-profile and try again");
+                exit(0);
             }
-            auto times = to!ulong(lines[line][start_pos .. pos - 1]);
+            immutable times = to!ulong(lines[line][start_pos .. pos - 1]);
             auto name = lines[line][pos .. $];
             if (caller)
-                caller_graph[text(name)] = new function_edge(name, times);
+            {
+                caller_graph[text(name)] = new FunctionEdge(name, times);
+            }
             else
-                called_graph[text(name)] = new function_edge(name, times);
+            {
+                called_graph[text(name)] = new FunctionEdge(name, times);
+            }
         }
     }
     if (function_name.length != 0)
-        nodes[text(function_name)] = new function_node(function_name,
+    {
+        nodes[text(function_name)] = new FunctionNode(function_name,
             function_times, function_and_descendant, function_only, caller_graph, called_graph);
+    }
 
     auto dmain = nodes["_Dmain"];
+
     if (dmain is null)
     {
         writeln("Corrupt trace.log (there's no entry for _Dmain), please re-profile and try again");
-        return 1;
+        exit(0);
     }
+
     auto total_time = dmain.function_and_descendant_time;
 
-    /*
-	render the overview table at the top of the screen
-*/
-    function_node.html_render_header();
-    foreach (current; nodes)
+    FunctionNode.html_render_header();
+    foreach (current; nodes){
         current.html_render_summary(total_time, ticks_per_second);
-    function_node.html_render_footer();
+    }
+    FunctionNode.html_render_footer();
 
-    /*
-	render each function
-*/
-    foreach (current; nodes)
+    foreach (current; nodes){
         current.html_render(total_time, ticks_per_second, nodes);
+    }
 
     return 0;
 }
 
-/*
-	MAIN()
-	------
-*/
-int main(string[] args)
+int main()
 {
-    try
-    {
-        /*
-		In the off chance that this program is compiled to use the profiler we'll change the name of the output to avoid destruction
-	*/
-        trace_setlogfilename("trace.log.d_profile_viewer");
-        trace_setdeffilename("trace.def.d_profile_viewer");
-        return draw_profile(args);
-    }
-    catch
-    {
-        writeln("trace.log appears to be corrupt");
-        return 1;
-    }
+	//In the off chance that this program is compiled to use the profiler
+	//we'll change the name of the output to avoid destruction
+    trace_setlogfilename("trace.log.d_profile_viewer");
+    trace_setdeffilename("trace.def.d_profile_viewer");
+    return draw_profile();
 }
