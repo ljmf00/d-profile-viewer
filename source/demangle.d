@@ -1268,7 +1268,7 @@ immutable string[2][] table =
         ["_D8demangle27__T4testTS8demangle3fooVnnZ3bar3bazFZv_D1a5Class1cMxFZv", "void demangle.test!(demangle.foo, null).bar.baz()"],      // CORRECT: ambiguity as 'V' is both the Pascal call convention and template parameter marker (Issue 14591)
         ["_D1a5Class1wMNgFZv", "inout void a.Class.w()"],                                                                                                               // CORRECT: inout return value
         ["_D16TypeInfo_HAyayAa6__initZ", "TypeInfo_HAyayAa.__init"],                                                                                                // CORRECT: the mangler appears to be incorrect in this case (Issue 11586)
-        ["_D4util13demangle_funs1A18ã•ã„ã”ã®æžœå®ŸMFiZv", "void util.demangle_funs.A.ã•ã„ã”ã®æžœå®Ÿ(int)"],                                                     // CORRECT: unicode in mangled name (Issue 10393)
+        ["_D4util13demangle_funs1A18さいごの果実MFiZv", "void util.demangle_funs.A.さいごの果実(int)"],														// CORRECT: unicode in mangled name (Issue 10393)
         ["_D8demangle21__T2fnVHiiA2i1i2i3i4Z2fnFZv", "void demangle.fn!([1:2, 3:4]).fn()"],                                                                 // CORRECT: associative array (Issue 6526)
         ["_D8demangle1S2fnMFZv", "void demangle.S.fn()"],                                                                                                               // CORRECT: function type modifiers
         ["_D8demangle1S2fnMxFZv", "const void demangle.S.fn()"],                                                                                                        // CORRECT: function type modifiers
