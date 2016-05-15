@@ -839,9 +839,9 @@ public:
             "],");
         foreach (current; calls_to)
         {
-            ulong descendant_time = (
+            ulong descendant_time = cast(ulong)((
                 nodes[current.mangled_name].function_and_descendant_time
-                / nodes[current.mangled_name].number_of_calls) * current.calls;
+                / cast(double)nodes[current.mangled_name].number_of_calls) * current.calls);
             outstream.write("['", current.name, "',  ", to_us(descendant_time,
                 ticks_per_second), "],");
         }
@@ -891,7 +891,7 @@ public:
         foreach (current; calls_to)
             descendant_time_sum += (
                 nodes[current.mangled_name].function_and_descendant_time
-                / nodes[current.mangled_name].number_of_calls) * current.calls;
+                / cast(double)nodes[current.mangled_name].number_of_calls) * current.calls;
 
         outstream.write("\t\t\t\t\t\t");
         outstream.write("<tr>");
@@ -906,9 +906,10 @@ public:
 
         foreach (current; calls_to)
         {
-            ulong descendant_time = (
+            ulong descendant_time = cast(ulong)((
                 nodes[current.mangled_name].function_and_descendant_time
-                / nodes[current.mangled_name].number_of_calls) * current.calls;
+                / cast(double)nodes[current.mangled_name].number_of_calls) * current.calls);
+
             outstream.write("\t\t\t\t\t\t");
             outstream.write("<tr>");
             outstream.write("<td align=right>", current.calls, "</td>");
