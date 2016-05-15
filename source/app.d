@@ -889,9 +889,9 @@ public:
         count = 0;
         ulong descendant_time_sum = function_time;
         foreach (current; calls_to)
-            descendant_time_sum += (
+            descendant_time_sum += cast(ulong)((
                 nodes[current.mangled_name].function_and_descendant_time
-                / cast(double)nodes[current.mangled_name].number_of_calls) * current.calls;
+                / cast(double)nodes[current.mangled_name].number_of_calls) * current.calls);
 
         outstream.write("\t\t\t\t\t\t");
         outstream.write("<tr>");
