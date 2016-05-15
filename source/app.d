@@ -728,10 +728,10 @@ public:
 						<tr><th align=right>Calls:</th><td> </td><td>",
             number_of_calls, "</td></tr>
 						<tr><th align=right>Function time:</th><td bgcolor='#000000'>&nbsp;</td><td>", to_us(function_time,
-            ticks_per_second), "Î¼s (", percent(function_time, total_time),
+            ticks_per_second), "&micro;s (", percent(function_time, total_time),
             "% of Focus)</td></tr>
 						<tr><th align=right>F+D time:</th><td bgcolor=#DC3912>&nbsp;</td><td>",
-            to_us(function_and_descendant_time, ticks_per_second), "Î¼s (",
+            to_us(function_and_descendant_time, ticks_per_second), "&micro;s (",
             percent(function_and_descendant_time, total_time), "% of Focus)</td></tr>
 					</table>
 				<td>
@@ -881,8 +881,8 @@ public:
             outstream.write("<th>Calls</th>");
         else
             outstream.write("<th></th>");
-        outstream.write("<th>â‰ˆTime</th>");
-        outstream.write("<th>â‰ˆPercent</th>");
+        outstream.write("<th>&ap;Time</th>");
+        outstream.write("<th>&ap;Percent</th>");
         outstream.write("<th></th>");
         outstream.write("<th align=left>Descendant</th>");
         outstream.write("</tr>");
@@ -897,7 +897,7 @@ public:
         outstream.write("<tr>");
         outstream.write("<td></td>");
         outstream.write("<td align=right>", to_us(function_time, ticks_per_second),
-            "Î¼s</td>");
+            "&micro;s</td>");
         outstream.write("<td align=right>", percent(function_time, descendant_time_sum),
             "</td>");
         outstream.write("<td bgcolor='#000000'>&nbsp;</td>");
@@ -913,7 +913,7 @@ public:
             outstream.write("<tr>");
             outstream.write("<td align=right>", current.calls, "</td>");
             outstream.write("<td align=right>", to_us(descendant_time,
-                ticks_per_second), "Î¼s</td>");
+                ticks_per_second), "&micro;s</td>");
             outstream.write("<td align=right>", percent(descendant_time,
                 descendant_time_sum), "</td>");
             outstream.write("<td bgcolor=",
@@ -951,7 +951,7 @@ private char[][] buffer_to_list(void[] file)
     uint next = 0;
 
     for (auto ch = start; ch < end; ch++)
-        if (*ch == '\n')
+        if (*ch == '\n' || *ch == '\r')						// we need to check for '\n' and '\r' because they are defined differently on Mac / Linux / Windows (so one or the other with match)
         {
             if (next >= answer.length){
                 answer.length += 100_000;
@@ -962,6 +962,10 @@ private char[][] buffer_to_list(void[] file)
     return answer;
 }
 
+/*
+	DRAW_PROFILE()
+	--------------
+*/
 private int draw_profile()
 {
     bool caller = true;
@@ -1012,7 +1016,6 @@ private int draw_profile()
             continue; // Ignore blank lines
         }
         else if (lines[line][0] == '=') // Seperator between call graph and summary data
-
         {
             auto number = indexOfAny(lines[line], "1234567890");
             if (number < 0)
@@ -1097,6 +1100,10 @@ private int draw_profile()
     return 0;
 }
 
+/*
+	MAIN()
+	------
+*/
 int main()
 {
 	//In the off chance that this program is compiled to use the profiler
