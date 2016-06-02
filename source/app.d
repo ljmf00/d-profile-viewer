@@ -15,6 +15,7 @@ import core.runtime;
 import std.conv;
 import std.algorithm;
 import std.exception;
+import std.demangle;
 
 private File outstream; //Where we write the output
 
@@ -39,7 +40,13 @@ public:
     this(const(char)[] mangled_name, ulong calls)
     {
         this.mangled_name = mangled_name;
-        this.name = demangle.demangle(mangled_name);
+
+		const (char) [] demangled_name;
+        demangled_name = demangle.demangle(mangled_name);
+		if (demangled_name[0] == '_')								// in the unlikely event that we fail to demangle, fall back to the phobos demangler
+			demangled_name = std.demangle.demangle(cast(string)mangled_name);
+		this.name = demangled_name;
+
         this.calls = calls;
     }
 }
@@ -90,7 +97,13 @@ public:
         ulong function_time, FunctionEdge[string] called_by, FunctionEdge[string] calls_to)
     {
         this.mangled_name = mangled_name;
-        this.name = demangle.demangle(mangled_name);
+
+		const (char) [] demangled_name;
+        demangled_name = demangle.demangle(mangled_name);
+		if (demangled_name[0] == '_')								// in the unlikely event that we fail to demangle, fall back to the phobos demangler
+			demangled_name = std.demangle.demangle(cast(string)mangled_name);
+		this.name = demangled_name;
+
         this.number_of_calls = calls;
         this.function_and_descendant_time = function_and_descendant_time;
         this.function_time = function_time;
@@ -1039,21 +1052,16 @@ private int draw_profile()
             caller_graph = null;
             called_graph = null;
         }
-        else if (lines[line][0] == '_') //The name of the function were're currently examining the call graph for (seperates callers from called)
-        {
-            auto start_tab = indexOf(lines[line], '\t');
-            auto middle_tab = indexOf(lines[line][start_tab + 1 .. $], '\t') + start_tab + 1;
-            auto last_tab = indexOf(lines[line][middle_tab + 1 .. $], '\t') + middle_tab + 1;
-            function_name = lines[line][0 .. start_tab];
-            function_times = to!ulong(lines[line][start_tab + 1 .. middle_tab]);
-            function_and_descendant = to!ulong(lines[line][middle_tab + 1 .. last_tab]);
-            function_only = to!ulong(lines[line][last_tab + 1 .. $]);
-            caller = false;
-        }
-        else if (lines[line][0] == '\t')
+		else if (lines[line][0] == '\t')
         {
             // A function either calling or called by this function
-            auto pos = indexOf(lines[line], '_');
+			/*
+				We can't assume a name starts with an '_' because it might be an extern "C" which hasn't been mangled.
+				We also can't assume the character encodin of what ever language that is so we look for the last tab
+				and asusme the identifier starts on the next character.
+			*/
+//            auto pos = indexOfAny(lines[line], "_");
+            auto pos = lastIndexOf(lines[line], '\t') + 1;
             auto start_pos = indexOfAny(lines[line], "1234567890");
             if (start_pos < 0 || pos < 0 || pos < start_pos)
             {
@@ -1070,6 +1078,22 @@ private int draw_profile()
             {
                 called_graph[text(name)] = new FunctionEdge(name, times);
             }
+        }
+		/*
+			In the case of a call to a non-D function, the identifier might not start with an '_' (e.g. extern "C").  But, we can't know
+			how those identifiers are stored so we can't assume an encoding - and hence we must assume that what ever we have is correct.
+		*/
+//      else if (indexOf("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", lines[line][0]) >= 0) //The name of the function were're currently examining the call graph for (seperates callers from called)
+        else //The name of the function were're currently examining the call graph for (seperates callers from called)
+        {
+            auto start_tab = indexOf(lines[line], '\t');
+            auto middle_tab = indexOf(lines[line][start_tab + 1 .. $], '\t') + start_tab + 1;
+            auto last_tab = indexOf(lines[line][middle_tab + 1 .. $], '\t') + middle_tab + 1;
+            function_name = lines[line][0 .. start_tab];
+            function_times = to!ulong(lines[line][start_tab + 1 .. middle_tab]);
+            function_and_descendant = to!ulong(lines[line][middle_tab + 1 .. last_tab]);
+            function_only = to!ulong(lines[line][last_tab + 1 .. $]);
+            caller = false;
         }
     }
     if (function_name.length != 0)
