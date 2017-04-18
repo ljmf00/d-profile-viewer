@@ -526,7 +526,7 @@ private const(char)[] QualifiedName()
                     name ~= part;
                 break;
             }
-            catch
+            catch (Throwable)
             {
                 if (digits <= 1){
                     throw new Exception("badly formed LName");
@@ -1226,7 +1226,7 @@ const(char)[] demangle(const(char)[] mangled, char[] destination = null)
         auto got = demangle_entry(mangled[2 .. $]);
         return got.length == 0 ? mangled : got;
     }
-    catch
+    catch (Throwable)
     {
         return mangled;
     }
